@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class ProductService {
 
@@ -46,6 +48,12 @@ public class ProductService {
     @Transactional
     public void delete(Long id) {
         repository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductDTO> findByCategory(Long categoryId) {
+        List<Product> products = repository.findByCategoryId(categoryId);
+        return products.stream().map(ProductDTO::new).toList();
     }
 
     private void copyDtoToEntity(ProductDTO dto, Product entity) {
