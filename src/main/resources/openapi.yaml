@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: MeliCommerce API
+  description: |
+    API RESTful desenvolvida em Java com Spring Boot para gerenciamento e
+    comparação de produtos em um cenário de e-commerce.
+
+    O principal objetivo da API é fornecer endpoints claros, seguros e eficientes
+    para recuperação de dados de produtos, permitindo funcionalidades como:
+    - Listagem paginada
+    - Consulta individual
+    - Cadastro, atualização e remoção
+    - Comparação de múltiplos produtos por ID
+
+    A API utiliza banco de dados em memória (H2) e segue boas práticas de
+    arquitetura, validação e tratamento de erros.
+  version: 1.0.0
+  contact:
+    name: Francisco Correia
+    role: Software Engineer
+    email: francisco@example.com
+
+servers:
+  - url: http://localhost:8080
+    description: Ambiente local
+
+tags:
+  - name: Products
+    description: Operações relacionadas a produtos
+  - name: Comparison
+    description: Operações de comparação de produtos
+
+paths:
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Listar produtos (paginado)
+      description: |
+        Retorna uma lista paginada de produtos cadastrados no sistema.
+
+        Este endpoint suporta paginação e ordenação utilizando os parâmetros
+        padrão do Spring Data (`page`, `size`, `sort`).
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            example: 0
+          description: Número da página (base 0)
+        - in: query
+          name: size
+          schema:
+            type: integer
+            example: 10
+          description: Quantidade de registros por página
+        - in: query
+          name: sort
+          schema:
+            type: string
+            example: name,asc
+          description: Campo e direção de ordenação
+      responses:
+        '200':
+          description: Lista paginada de produtos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProductDTO'
+
+    post:
+      tags:
+        - Products
+      summary: Criar um novo produto
+      description: |
+        Cria um novo produto no sistema.
+
+        Os dados são validados automaticamente usando Bean Validation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        '201':
+          description: Produto criado com sucesso
+          headers:
+            Location:
+              description: URL do recurso criado
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        '400':
+          description: Erro de validação ou dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomError'
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Buscar produto por ID
+      description: Retorna os dados de um produto específico.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 3
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomError'
+
+    put:
+      tags:
+        - Products
+      summary: Atualizar produto
+      description: Atualiza os dados de um produto existente.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        '200':
+          description: Produto atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomError'
+
+    delete:
+      tags:
+        - Products
+      summary: Remover produto
+      description: |
+        Remove um produto do sistema.
+
+        Caso o produto possua dependências, será retornado erro de integridade.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Produto removido com sucesso
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomError'
+        '400':
+          description: Falha de integridade referencial
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomError'
+
+  /products/compare:
+    get:
+      tags:
+        - Comparison
+      summary: Comparar produtos por IDs
+      description: |
+        Retorna uma lista de produtos com base em uma lista de IDs informados.
+
+        Este endpoint é projetado especificamente para suportar telas de
+        comparação lado a lado em aplicações de e-commerce.
+
+        Regras:
+        - O parâmetro `ids` é obrigatório
+        - Os IDs devem ser numéricos e separados por vírgula
+        - Caso nenhum produto seja encontrado, retorna 404
+      parameters:
+        - in: query
+          name: ids
+          required: true
+          schema:
+            type: string
+            example: "1,3,5"
+          description: Lista de IDs separados por vírgula
+      responses:
+        '200':
+          description: Lista de produtos para comparação
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductDTO'
+        '400':
+          description: Parâmetro inválido ou ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomError'
+        '404':
+          description: Nenhum produto encontrado para os IDs informados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomError'
+
+components:
+  schemas:
+
+    ProductDTO:
+      type: object
+      description: Representação de um produto no sistema
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          minLength: 3
+          maxLength: 80
+          example: Macbook Pro
+        description:
+          type: string
+          minLength: 10
+          example: Notebook de alto desempenho para desenvolvimento
+        price:
+          type: number
+          format: double
+          example: 1250.0
+        imgUrl:
+          type: string
+          example: https://example.com/image.png
+        rating:
+          type: number
+          format: double
+          example: 4.8
+        specifications:
+          type: string
+          example: Apple M1, 16GB RAM, 512GB SSD
+
+    PageProductDTO:
+      type: object
+      description: Estrutura de paginação padrão do Spring Data
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDTO'
+        totalElements:
+          type: integer
+          example: 50
+        totalPages:
+          type: integer
+          example: 5
+        number:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 10
+
+    CustomError:
+      type: object
+      description: Estrutura padrão de erro da API
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-01T12:00:00Z"
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: Parâmetro inválido
+        path:
+          type: string
+          example: /products/compare
