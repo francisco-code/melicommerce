@@ -1,6 +1,7 @@
 package com.franciscode.melicommerce.controllers.handlers;
 
 import com.franciscode.melicommerce.dto.CustomError;
+import com.franciscode.melicommerce.services.exceptions.BadRequestException;
 import com.franciscode.melicommerce.services.exceptions.DatabaseException;
 import com.franciscode.melicommerce.services.exceptions.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +24,13 @@ public class ControllerExceptionHandler {
 
     @ExceptionHandler(DatabaseException.class)
     public ResponseEntity<CustomError> database(DatabaseException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<CustomError> badRequest(BadRequestException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);

@@ -3,6 +3,7 @@ package com.franciscode.melicommerce.services;
 import com.franciscode.melicommerce.dto.ProductDTO;
 import com.franciscode.melicommerce.entities.Product;
 import com.franciscode.melicommerce.repositories.ProductRepository;
+import com.franciscode.melicommerce.services.exceptions.BadRequestException;
 import com.franciscode.melicommerce.services.exceptions.DatabaseException;
 import com.franciscode.melicommerce.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -69,8 +71,23 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductDTO> findProductsByIds(List<Long> ids) {
-        List<Product> products = repository.findAllById(ids);
+    public List<ProductDTO> compareProductsByIds(String ids) {
+        if (ids == null || ids.isBlank()) {
+            throw new BadRequestException("O parâmetro 'ids' é obrigatório.");
+        }
+        List<Long> productIds;
+        try {
+            productIds = Arrays.stream(ids.split(","))
+                    .map(String::trim)
+                    .map(Long::parseLong)
+                    .toList();
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Os IDs devem ser números válidos separados por vírgula.");
+        }
+        List<Product> products = repository.findAllById(productIds);
+        if (products.isEmpty()) {
+            throw new ResourceNotFoundException("Nenhum produto encontrado para os IDs informados.");
+        }
         return products.stream().map(ProductDTO::new).toList();
     }
 

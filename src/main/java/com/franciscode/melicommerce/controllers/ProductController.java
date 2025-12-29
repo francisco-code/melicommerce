@@ -2,6 +2,7 @@ package com.franciscode.melicommerce.controllers;
 
 import com.franciscode.melicommerce.dto.ProductDTO;
 import com.franciscode.melicommerce.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -21,28 +21,8 @@ public class ProductController {
     private ProductService service;
 
     @GetMapping("/compare")
-    public ResponseEntity<List<ProductDTO>> compareProducts(
-            @RequestParam(value = "ids") String ids) {
-
-        if (ids == null || ids.isBlank()) {
-            return ResponseEntity.badRequest().body(null);
-        }
-
-        List<Long> productIds;
-        try {
-            productIds = Arrays.stream(ids.split(","))
-                    .map(String::trim)
-                    .map(Long::parseLong)
-                    .toList();
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
-
-        List<ProductDTO> products = service.findProductsByIds(productIds);
-
-        if (products.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<List<ProductDTO>> compareProducts(@RequestParam(value = "ids") String ids) {
+        List<ProductDTO> products = service.compareProductsByIds(ids);
         return ResponseEntity.ok(products);
     }
 
@@ -59,7 +39,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> insert(@RequestBody ProductDTO dto) {
+    public ResponseEntity<ProductDTO> insert(@Valid @RequestBody ProductDTO dto) {
         dto = service.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(dto.getId()).toUri();
@@ -67,7 +47,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<ProductDTO> update(@PathVariable Long id, @RequestBody ProductDTO dto) {
+    public ResponseEntity<ProductDTO> update(@PathVariable Long id, @Valid @RequestBody ProductDTO dto) {
         dto = service.update(id, dto);
         return ResponseEntity.ok(dto);
     }
