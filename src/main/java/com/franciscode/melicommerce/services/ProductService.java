@@ -51,8 +51,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductDTO> findByCategory(Long categoryId) {
-        List<Product> products = repository.findByCategoryId(categoryId);
+    public List<ProductDTO> findProductsByIds(List<Long> ids) {
+        List<Product> products = repository.findAllById(ids);
         return products.stream().map(ProductDTO::new).toList();
     }
 
@@ -61,5 +61,7 @@ public class ProductService {
         entity.setDescription(dto.getDescription());
         entity.setPrice(dto.getPrice());
         entity.setImgUrl(dto.getImgUrl());
+        entity.setRating(dto.getRating());
+        entity.setSpecifications(dto.getSpecifications());
     }
 }

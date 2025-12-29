@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/products")
@@ -17,6 +19,32 @@ public class ProductController {
 
     @Autowired
     private ProductService service;
+
+    @GetMapping("/compare")
+    public ResponseEntity<List<ProductDTO>> compareProducts(
+            @RequestParam(value = "ids") String ids) {
+
+        if (ids == null || ids.isBlank()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        List<Long> productIds;
+        try {
+            productIds = Arrays.stream(ids.split(","))
+                    .map(String::trim)
+                    .map(Long::parseLong)
+                    .toList();
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        List<ProductDTO> products = service.findProductsByIds(productIds);
+
+        if (products.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(products);
+    }
 
     @GetMapping(value = "/{id}")
     public ResponseEntity<ProductDTO> findById(@PathVariable Long id) {

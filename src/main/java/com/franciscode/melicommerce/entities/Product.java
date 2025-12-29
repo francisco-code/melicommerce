@@ -20,12 +20,8 @@ public class Product {
     private String description;
     private Double price;
     private String imgUrl;
-    private Double rating; // Classificação do produto
-
-    @ElementCollection
-    @CollectionTable(name = "tb_product_specification", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "specification")
-    private Set<String> specifications = new HashSet<>();
+    private Double rating;
+    private String specifications;
 
     @ManyToMany
     @JoinTable(name = "tb_product_category",
@@ -39,7 +35,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(Long id, String name, String description, Double price, String imgUrl, Double rating, Set<String> specifications) {
+    public Product(Long id, String name, String description, Double price, String imgUrl, Double rating, String specifications) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -97,11 +93,11 @@ public class Product {
         this.rating = rating;
     }
 
-    public Set<String> getSpecifications() {
+    public String getSpecifications() {
         return specifications;
     }
 
-    public void setSpecifications(Set<String> specifications) {
+    public void setSpecifications(String specifications) {
         this.specifications = specifications;
     }
 
