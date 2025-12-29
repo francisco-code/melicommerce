@@ -23,6 +23,7 @@ Um backend RESTful simples — feito em Java com Spring Boot — que expõe os d
 - Configuração e execução (local / Docker)
 - Testes (estratégia e exemplos)
 - Possíveis melhorias e considerações de produção
+- Documentação (Swagger / OpenAPI) — como acessar
 - Anexos: exemplos de requests/responses e cURL
 
 ---
@@ -252,6 +253,48 @@ spring.datasource.url=jdbc:h2:mem:testdb
 
 ---
 
+## Documentação (Swagger / OpenAPI)
+
+A documentação automática via OpenAPI/Swagger facilita explorar a API, visualizar schemas e testar endpoints diretamente pelo navegador.
+
+- Dependência sugerida (springdoc-openapi):
+```xml
+<!-- pom.xml -->
+<dependency>
+  <groupId>org.springdoc</groupId>
+  <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+  <version>2.8.8</version>
+</dependency>
+```
+
+- Propriedades opcionais (application.properties / application.yml):
+```
+# Exemplo (opcional)
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+# Normalmente não é necessário alterar; o UI padrão fica disponível em /swagger-ui/index.html
+```
+
+- Como acessar o Swagger UI pelo navegador:
+    1. Inicie a aplicação (ex.: `mvn spring-boot:run` ou `java -jar target/melicommerce-0.0.1-SNAPSHOT.jar`).
+    2. Abra seu navegador e acesse:
+       ```
+       http://localhost:8080/swagger-ui/index.html
+       ```
+       (Se alterou a porta ou o contexto da aplicação, substitua conforme necessário — ex.: `http://<host>:<port>/<context>/swagger-ui/index.html`.)
+    3. No Swagger UI você poderá:
+        - Ver todos os endpoints expostos (GET/POST/PUT/DELETE).
+        - Ver modelos (ProductDTO, CustomError, etc.).
+        - Usar o botão "Try it out" para testar chamadas diretamente do navegador.
+        - Ver o JSON do OpenAPI em: `http://localhost:8080/v3/api-docs`
+
+- Observações práticas:
+    - Se o Swagger UI não aparecer, verifique se a dependência `springdoc-openapi` está presente e a aplicação subiu sem erros na inicialização.
+    - Em ambientes com segurança (autenticação) pode ser necessário liberar o acesso ao caminho do swagger no filtro de segurança (ex.: WebSecurityConfigurerAdapter ou SecurityFilterChain).
+    - Se estiver usando Spring Boot Devtools, às vezes o cache do navegador pode apresentar versões antigas — recarregue (Ctrl+F5) ou abra em modo incógnito.
+
+---
+
 ## Configuração e execução
 
 Pré-requisitos:
@@ -308,7 +351,7 @@ Resposta 200:
   "price": 1250.0,
   "imgUrl": "...",
   "rating": 4.8,
-  "specifications": "Apple M1, 16GB RAM, 512GB SSD, 13\" Retina"
+  "specifications": "Apple M1, 16GB RAM, 512GB SSD, 13 Retina"
 }
 ```
 
