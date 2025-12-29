@@ -12,9 +12,6 @@ public class ProductDTO {
     private Double rating;
     private String specifications;
 
-    public ProductDTO() {
-    }
-
     public ProductDTO(Long id, String name, String description, Double price, String imgUrl, Double rating, String specifications) {
         this.id = id;
         this.name = name;
